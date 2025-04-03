@@ -1,0 +1,101 @@
+from datetime import datetime, date
+from http.client import HTTPException
+from fastapi import FastAPI,Response,status,HTTPException,Depends
+from random import randrange
+from pydantic import BaseModel,Field
+from typing import Optional
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from sqlalchemy.orm import Session
+import time
+from . import  models
+from .database import engine,SessionLocal
+
+models.Base.metadata.create_all(bind=engine)
+app=FastAPI()
+
+#Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+
+class Post(BaseModel):
+    title:str
+    content:str
+    published:bool=True
+    created_at: date = Field(default_factory=date.today)
+
+
+
+try:
+        conn=psycopg2.connect(host="localhost",
+                              database="post_db",
+                              user="postgres",
+                              password="dio4646",
+                              port="5433",
+                              cursor_factory=RealDictCursor)
+        cursor=conn.cursor()
+        print("Database connected successfully")
+except Exception as error:
+        print("Error while connecting to database",error)
+        time.sleep(3)
+@app.get("/")
+async def root():
+    return {"message":"Again Starting Fastapi"}
+
+@app.get("/posts")
+async def get_posts():
+    cursor.execute("SELECT * FROM post")
+    posts=cursor.fetchall()
+    return {"message":posts}
+
+@app.post("/posts", status_code=status.HTTP_201_CREATED)
+async def create_posts(post: Post):  # Ensure Post model is used
+    cursor.execute(
+        "INSERT INTO post (title, content, published) VALUES (%s, %s, %s) RETURNING *",
+        (post.title, post.content, post.published)
+    )
+    newly_posted_post = cursor.fetchone()
+    conn.commit()  # Commit the transaction to persist changes
+    return {"data": newly_posted_post}
+
+
+@app.get("/posts/{id}")
+async def get_specific_post(id: int):
+    cursor.execute("SELECT * FROM post WHERE id = %s", (str(id),))
+    post = cursor.fetchone()
+    if not post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Post with id {id} not found"
+        )
+    return {"detail": post}
+
+
+@app.delete("/posts/{id}",status_code=status.HTTP_204_NO_CONTENT)
+async def delete_post(id:int):
+    cursor.execute("DELETE FROM post WHERE id=%s RETURNING *",(str(id),))
+    deleted_post=cursor.fetchone()
+    conn.commit()
+    if deleted_post is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Post with id {id} not found")
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+@app.put("/posts/{id}")
+async def update_post(id: int, post: Post):
+    cursor.execute("UPDATE post SET title=%s, content=%s, published=%s WHERE id=%s RETURNING *",
+                   (post.title,post.content,post.published,id))
+    updated_post=cursor.fetchone()
+    if updated_post is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Post with id {id} not found")
+    conn.commit()
+
+    return {"data": updated_post}

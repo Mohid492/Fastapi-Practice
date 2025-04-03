@@ -1,0 +1,9 @@
+uvicorn app.main:app --reload
+
+for making migrations just like in django :
+
+alembic revision --autogenerate -m"Votes table added"
+then:
+alembic upgrade head
+
+pytest -vs --disable-warnings
