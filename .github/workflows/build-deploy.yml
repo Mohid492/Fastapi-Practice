@@ -1,20 +1,13 @@
 name: Build and Deploy code
-#on:
-#  push:
-#    branches:
-#      - "main" #branches that will run after push
-#  pull_request:
-#    branches:
-#        - "test-branch" #branches that will run after pull request
 on: [push, pull_request]
 jobs:
   job1:
     environment: testing
     env:
-      DATABASE_HOSTNAME : ${{secrets.DATABASE_HOSTNAME}}
-      DATABASE_PORT : ${{secrets.DATABASE_PORT}}
-      DATABASE_PASSWORD : dio4646
-      DATABASE_NAME : fastapi
+      DATABASE_HOSTNAME: localhost
+      DATABASE_PORT: 5433  # Match the port exposed by Postgres service
+      DATABASE_PASSWORD: dio4646
+      DATABASE_NAME: fast_api  # Match the name in your connection string
       DATABASE_USERNAME: postgres
       SECRET_KEY: 8174d7fe81ea7993d0cd612ac59c1d36634bd3d4246867e2ae1d5cf9480dcbbbe4f05d8dc76c978ea5e09311bb7f8c46550b9049551daf217c974a9f6ae9d5df
       ALGORITHM: HS256
@@ -24,7 +17,7 @@ jobs:
         image: postgres
         env:
             POSTGRES_PASSWORD: dio4646
-            POSTGRES_DB: fastapi_test
+            POSTGRES_DB: fastapi_test  # Match this with your app's expected DB name
         ports:
             - 5432:5432
         options: >-
@@ -44,11 +37,8 @@ jobs:
       - name: update pip
         run: python -m pip install --upgrade pip
       - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Install test dependencies
-        run: pip install pytest pytest-cov
-
+        run: |
+          pip install -r requirements.txt
+          pip install fastapi pytest pytest-cov sqlalchemy sqlmodel psycopg2-binary
       - name: Test with pytest
         run: pytest
-
