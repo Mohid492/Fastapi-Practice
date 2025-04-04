@@ -9,15 +9,29 @@ name: Build and Deploy code
 on: [push, pull_request]
 jobs:
   job1:
+    environment: testing
     env:
-      DATABASE_HOSTNAME : localhost
-      DATABASE_PORT : 5433
+      DATABASE_HOSTNAME : ${{secrets.DATABASE_HOSTNAME}}
+      DATABASE_PORT : ${{secrets.DATABASE_PORT}}
       DATABASE_PASSWORD : dio4646
       DATABASE_NAME : fastapi
       DATABASE_USERNAME: postgres
       SECRET_KEY: 8174d7fe81ea7993d0cd612ac59c1d36634bd3d4246867e2ae1d5cf9480dcbbbe4f05d8dc76c978ea5e09311bb7f8c46550b9049551daf217c974a9f6ae9d5df
       ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: 120
+    services:
+      postgres:
+        image: postgres
+        env:
+            POSTGRES_PASSWORD: dio4646
+            POSTGRES_DB: fastapi_test
+        ports:
+            - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     runs-on: ubuntu-latest
     steps:
