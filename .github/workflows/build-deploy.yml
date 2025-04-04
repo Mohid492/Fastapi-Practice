@@ -5,9 +5,9 @@ jobs:
     environment: testing
     env:
       DATABASE_HOSTNAME: localhost
-      DATABASE_PORT: 5433  # Match the port exposed by Postgres service
+      DATABASE_PORT: 5432  # Changed from 5433 to match the Postgres service port
       DATABASE_PASSWORD: dio4646
-      DATABASE_NAME: fast_api  # Match the name in your connection string
+      DATABASE_NAME: post_db_test  # Changed to match the database name in the error
       DATABASE_USERNAME: postgres
       SECRET_KEY: 8174d7fe81ea7993d0cd612ac59c1d36634bd3d4246867e2ae1d5cf9480dcbbbe4f05d8dc76c978ea5e09311bb7f8c46550b9049551daf217c974a9f6ae9d5df
       ALGORITHM: HS256
@@ -17,7 +17,7 @@ jobs:
         image: postgres
         env:
             POSTGRES_PASSWORD: dio4646
-            POSTGRES_DB: fastapi_test  # Match this with your app's expected DB name
+            POSTGRES_DB: post_db_test  # Changed to match DATABASE_NAME
         ports:
             - 5432:5432
         options: >-
